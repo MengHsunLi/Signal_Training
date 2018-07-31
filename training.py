@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 ap_SSID = pd.Series(['AP1', 'AP2', 'AP3', 'AP4', 'AP5'])
 ap_BSSID = pd.Series(['00:1b:2f:a8:e5:21', '00:1b:2f:a8:e5:22', '00:1b:2f:a8:e5:23', '00:1b:2f:a8:e5:24', '00:1b:2f:a8:e5:25'])
@@ -7,12 +8,12 @@ loc = pd.Series(['Loc1', 'Loc2', 'Loc3', 'Loc4'])
 device_wifi_first = pd.Series(['AP2', 'AP3', 'AP1', 'AP5'])
 device_wifi_second = pd.Series(['AP3', 'AP5', 'AP4', 'AP4'])
 device_wifi_third = pd.Series(['AP1', 'AP4', 'AP5', 'AP3'])
-device_wifi_signal_first = pd.Series(['0.8197', '0.9', '0.8882', '0.8882'])
-device_wifi_signal_second = pd.Series(['0.7764', '0.8197', '0.8586', '0.8586'])
-device_wifi_signal_third = pd.Series(['0.7307', '0.6838', '0.6959', '0.7'])
+device_wifi_signal_first = pd.Series([0.8197, 0.9, 0.8882, 0.8882])
+device_wifi_signal_second = pd.Series([0.7764, 0.8197, 0.8586, 0.8586])
+device_wifi_signal_third = pd.Series([0.7307, 0.6838, 0.6959, 0.7])
 device_loc = pd.Series(['Loc1', 'Loc2', 'Loc3', 'Loc4'])
-location_x = pd.Series(['0', '1', '0', '1'])
-location_y = pd.Series(['0', '0', '1', '1'])
+location_x = pd.Series([0, 1, 0, 1])
+location_y = pd.Series([0, 0, 1, 1])
 
 ap = pd.DataFrame({'SSID':ap_SSID, 'BSSID':ap_BSSID, 'Secure':ap_isSecure})
 # SSID        BSSID       Secure
@@ -63,18 +64,29 @@ device.insert(loc=0, column='WIFI_BSSID_First', value=device_wifi_bssid_first)
 
 device_wifi_one_hot_first = pd.get_dummies(device['WIFI_SSID_First'])
 for item in ap_SSID:
-  if item not in device_wifi_one_hot_first:
-    device_wifi_one_hot_first[item] = [0, 0, 0, 0]
+    if item not in device_wifi_one_hot_first:
+        device_wifi_one_hot_first[item] = [0, 0, 0, 0]
 device_wifi_one_hot_second = pd.get_dummies(device['WIFI_SSID_Second'])
 for item in ap_SSID:
-  if item not in device_wifi_one_hot_second:
-    device_wifi_one_hot_second[item] = [0, 0, 0, 0]
+    if item not in device_wifi_one_hot_second:
+        device_wifi_one_hot_second[item] = [0, 0, 0, 0]
 device_wifi_one_hot_third = pd.get_dummies(device['WIFI_SSID_Third'])
 for item in ap_SSID:
-  if item not in device_wifi_one_hot_third:
-    device_wifi_one_hot_third[item] = [0, 0, 0, 0]
+    if item not in device_wifi_one_hot_third:
+        device_wifi_one_hot_third[item] = [0, 0, 0, 0]
 device_wifi_one_hot = device_wifi_one_hot_first + device_wifi_one_hot_second + device_wifi_one_hot_third
 device = device.join(device_wifi_one_hot)
+
+newdevice = device
+for i in range(9):
+    newdevice = pd.concat([newdevice, device],axis=0, ignore_index=True)
+
+noise_df = pd.DataFrame(np.random.random((50,3)), columns=['WIFI_Signal_First', 'WIFI_Signal_Second', 'WIFI_Signal_Third'])
+noise_df/=100
+
+for item in newdevice:
+    if item in noise_df:
+        newdevice[item]+=noise_df[item]
 
 print("ap:")
 print(ap)
@@ -82,3 +94,7 @@ print("\nlocation:")
 print(location)
 print("\ndevice:")
 print(device)
+print("\nnoise:")
+print(noise_df)
+print("\nnewdevice:")
+print(newdevice)
