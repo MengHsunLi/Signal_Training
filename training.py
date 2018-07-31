@@ -77,6 +77,9 @@ for item in ap_SSID:
 device_wifi_one_hot = device_wifi_one_hot_first + device_wifi_one_hot_second + device_wifi_one_hot_third
 device = device.join(device_wifi_one_hot)
 
+device_location_one_hot = pd.get_dummies(device['Location'])
+device = device.join(device_location_one_hot)
+
 newdevice = device
 for i in range(9):
     newdevice = pd.concat([newdevice, device],axis=0, ignore_index=True)
