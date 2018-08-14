@@ -85,7 +85,7 @@ newdevice = device
 for i in range(9):
     newdevice = pd.concat([newdevice, device],axis=0, ignore_index=True)
 
-noise_df = pd.DataFrame(np.random.random((50,3)), columns=['WIFI_Signal_First', 'WIFI_Signal_Second', 'WIFI_Signal_Third'])
+noise_df = pd.DataFrame(np.random.random((40,3)), columns=['WIFI_Signal_First', 'WIFI_Signal_Second', 'WIFI_Signal_Third'])
 noise_df/=10
 
 for item in newdevice:
