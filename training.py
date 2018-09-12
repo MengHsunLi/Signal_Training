@@ -209,8 +209,8 @@ def preprocess_targets(device):
     A DataFrame that contains target features.
   """
   output_targets = pd.DataFrame()
-  output_targets["Location_X"] = (
-    device["Location_X"])
+  output_targets["Location"] = (
+    device["Location"])
   return output_targets
 
 # Choose the first 30 (out of 40) examples for training.
@@ -317,14 +317,14 @@ def train_model(
 
   # Create input functions
   training_input_fn = lambda: my_input_fn(training_examples,
-                                          training_targets["Location_X"],
+                                          training_targets["Location"],
                                           batch_size=batch_size)
   predict_training_input_fn = lambda: my_input_fn(training_examples,
-                                                  training_targets["Location_X"],
+                                                  training_targets["Location"],
                                                   num_epochs=1,
                                                   shuffle=False)
   predict_validation_input_fn = lambda: my_input_fn(validation_examples,
-                                                    validation_targets["Location_X"],
+                                                    validation_targets["Location"],
                                                     num_epochs=1,
                                                     shuffle=False)
 
