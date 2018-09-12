@@ -1,17 +1,33 @@
 from __future__ import print_function
 import pandas as pd
 import numpy as np
+import math
 
 ap_SSID = pd.Series(['AP1', 'AP2', 'AP3', 'AP4', 'AP5'])
 ap_BSSID = pd.Series(['00:1b:2f:a8:e5:21', '00:1b:2f:a8:e5:22', '00:1b:2f:a8:e5:23', '00:1b:2f:a8:e5:24', '00:1b:2f:a8:e5:25'])
 ap_isSecure = pd.Series([True, False, True, False, False])
+ap_SignalStrength = pd.Series([-30, -30, -30, -30, -30])
 loc = pd.Series(['Loc1', 'Loc2', 'Loc3', 'Loc4'])
 device_wifi_first = pd.Series(['AP2', 'AP3', 'AP1', 'AP5'])
 device_wifi_second = pd.Series(['AP3', 'AP5', 'AP4', 'AP4'])
 device_wifi_third = pd.Series(['AP1', 'AP4', 'AP5', 'AP3'])
-device_wifi_signal_first = pd.Series([0.8197, 0.9, 0.8882, 0.8882])
-device_wifi_signal_second = pd.Series([0.7764, 0.8197, 0.8586, 0.8586])
-device_wifi_signal_third = pd.Series([0.7307, 0.6838, 0.6959, 0.7])
+device_wifi_dist_first = pd.Series([0.9014, 0.5000, 0.5590, 0.5590])
+device_wifi_dist_second = pd.Series([1.1180, 0.9014, 0.7071, 0.7071])
+device_wifi_dist_third = pd.Series([1.3463, 1.5811, 1.5207, 1.5000])
+#device_wifi_signal_first = pd.Series([0.8197, 0.9, 0.8882, 0.8882])
+#device_wifi_signal_second = pd.Series([0.7764, 0.8197, 0.8586, 0.8586])
+#device_wifi_signal_third = pd.Series([0.7307, 0.6838, 0.6959, 0.7])
+def distToLost(freq, lossFactor, dist, floor):
+    '''
+        freq: Frequency in MHz
+        lossFactor: -全開放環境:2.0~2.5 -半開放環境:2.5~3.0 -較封閉環境:3.0~3.5 -隧道環境:1.6~1.8
+        dist: Distance in meters
+        floor: Floors between AP and device
+    '''
+    loss = 20*np.log(freq)+10*lossFactor*np.log(dist)+6+3*(floor-1)
+    return loss
+
+
 device_loc = pd.Series(['Loc1', 'Loc2', 'Loc3', 'Loc4'])
 location_x = pd.Series([0, 1, 0, 1])
 location_y = pd.Series([0, 0, 1, 1])
@@ -29,6 +45,26 @@ location = pd.DataFrame({'Location':loc, 'Location_X':location_x, 'Location_Y':l
 #   Loc2       1          0
 #   Loc3       0          1
 #   Loc4       1          1
+device_wifi_signal_first_loss = distToLost(2400, 3.0, device_wifi_dist_first, 1)
+device_wifi_signal_second_loss = distToLost(2400, 3.0, device_wifi_dist_second, 1)
+device_wifi_signal_third_loss = distToLost(2400, 3.0, device_wifi_dist_third, 1)
+
+print("device_wifi_signal_first_loss:")
+print(device_wifi_signal_first_loss)
+print("device_wifi_signal_second_loss:")
+print(device_wifi_signal_second_loss)
+print("device_wifi_signal_third_loss:")
+print(device_wifi_signal_third_loss)
+
+device_wifi_signal_first_loss = 1/pow(10, np.log10((device_wifi_signal_first_loss)/10))
+device_wifi_signal_second_loss = 1/pow(10, np.log10((device_wifi_signal_second_loss)/10))
+device_wifi_signal_third_loss = 1/pow(10, np.log10((device_wifi_signal_third_loss)/10))
+
+device_wifi_signal_first = 500*device_wifi_signal_first_loss
+device_wifi_signal_second = 500*device_wifi_signal_second_loss
+device_wifi_signal_third = 500*device_wifi_signal_third_loss
+
+
 device = pd.DataFrame({'WIFI_SSID_First':device_wifi_first,'WIFI_Signal_First':device_wifi_signal_first,
                         'WIFI_SSID_Second':device_wifi_second, 'WIFI_Signal_Second':device_wifi_signal_second,
                         'WIFI_SSID_Third':device_wifi_third, 'WIFI_Signal_Third':device_wifi_signal_third,
@@ -38,6 +74,8 @@ device = pd.DataFrame({'WIFI_SSID_First':device_wifi_first,'WIFI_Signal_First':d
 #   Loc2         AP3             AP5             0.9000             0.8197
 #   Loc3         AP1             AP4             0.8882             0.8586
 #   Loc4         AP5             AP4             0.8882             0.8586
+
+
 
 device_wifi_bssid_first = []
 device_wifi_isSecure_first = []
@@ -55,7 +93,7 @@ for item in device['Location']:
 device.insert(loc=7, column='Location_Y', value=device_loc_y)
 device.insert(loc=7, column='Location_X', value=device_loc_x)
 device.insert(loc=0, column='WIFI_Secure_First', value=device_wifi_isSecure_first)
-device.insert(loc=0, column='WIFI_BSSID_First', value=device_wifi_bssid_first)
+#device.insert(loc=0, column='WIFI_BSSID_First', value=device_wifi_bssid_first)
 
 # Location  Location_X Location_Y WIFI_SSID_First WIFI_Signal_First     WIFI_BSSID     WIFI_Secure
 #   Loc1        0          0            AP2            0.8197        00:1b:2f:a8:e5:22     False
@@ -85,14 +123,24 @@ newdevice = device
 for i in range(499):
     newdevice = pd.concat([newdevice, device],axis=0, ignore_index=True)
 
-noise_df = pd.DataFrame(np.random.random((2000,3)), columns=['WIFI_Signal_First', 'WIFI_Signal_Second', 'WIFI_Signal_Third'])
-#noise_df/=10
-noise_df_2 = pd.DataFrame(np.random.choice([-1, 1], size=(2000, 3), p=[0.5, 0.5]), columns=['WIFI_Signal_First', 'WIFI_Signal_Second', 'WIFI_Signal_Third'])
-noise_df*=noise_df_2
+noise_df = pd.DataFrame(np.random.random((2000,3)), columns=['Bias_First', 'Bias_Second', 'Bias_Third'])
+noise_df*=10
+noise_df_2 = pd.DataFrame(np.random.choice([-1, 1], size=(2000, 3), p=[0.5, 0.5]), columns=['Rate_First', 'Rate_Second', 'Rate_Third'])
+noise_df = pd.concat([noise_df, noise_df_2], axis=1)
+noise_df['WIFI_Signal_First']=noise_df['Bias_First'].multiply(noise_df['Rate_First'], axis=0)
+noise_df['WIFI_Signal_Second']=noise_df['Bias_Second'].multiply(noise_df['Rate_Second'], axis=0)
+noise_df['WIFI_Signal_Third']=noise_df['Bias_Third'].multiply(noise_df['Rate_Third'], axis=0)
 
 for item in newdevice:
     if item in noise_df:
         newdevice[item]+=noise_df[item]
+
+
+for item in newdevice['WIFI_Signal_First']:
+    if item < 0:
+        newdevice['WIFI_Signal_First'].item = 0.0
+
+
 
 print("ap:")
 print(ap)
@@ -139,18 +187,18 @@ def preprocess_features(device):
      "AP1", "AP2", "AP3", "AP4", "AP5"
      ]]
   processed_features = selected_features.copy()
-  '''
-  # Create synthetic features.
-  processed_features["WIFI_Rate_1"] = (
-    device["WIFI_Signal_First"] *
-    device[device["WIFI_SSID_First"]])
-  processed_features["WIFI_Rate_2"] = (
-    device["WIFI_Signal_Second"] *
-    device[device["WIFI_SSID_Second"]])
-  processed_features["WIFI_Rate_3"] = (
-    device["WIFI_Signal_Third"] *
-    device[device["WIFI_SSID_Third"]])
-  '''
+#
+#  # Create synthetic features.
+#  processed_features["WIFI_Rate_1"] = (
+#    device["WIFI_Signal_First"] *
+#    device[device["WIFI_SSID_First"]])
+#  processed_features["WIFI_Rate_2"] = (
+#    device["WIFI_Signal_Second"] *
+#    device[device["WIFI_SSID_Second"]])
+#  processed_features["WIFI_Rate_3"] = (
+#    device["WIFI_Signal_Third"] *
+#    device[device["WIFI_SSID_Third"]])
+#
   return processed_features
 def preprocess_targets(device):
   """Prepares target features (i.e., labels) from dataframe.
@@ -173,18 +221,18 @@ training_targets = preprocess_targets(newdevice.head(1900))
 validation_examples = preprocess_features(newdevice.tail(100))
 validation_targets = preprocess_targets(newdevice.tail(100))
 
-'''
-# Double-check that we've done the right thing.
-print("Training examples summary:")
-display.display(training_examples.describe())
-print("Validation examples summary:")
-display.display(validation_examples.describe())
-
-print("Training targets summary:")
-display.display(training_targets.describe())
-print("Validation targets summary:")
-display.display(validation_targets.describe())
-'''
+#
+## Double-check that we've done the right thing.
+#print("Training examples summary:")
+#display.display(training_examples.describe())
+#print("Validation examples summary:")
+#display.display(validation_examples.describe())
+#
+#print("Training targets summary:")
+#display.display(training_targets.describe())
+#print("Validation targets summary:")
+#display.display(validation_targets.describe())
+#
 
 def construct_feature_columns(input_features):
   """Construct the TensorFlow Feature Columns.
