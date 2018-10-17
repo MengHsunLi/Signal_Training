@@ -1,0 +1,8 @@
+SSID(String): SSID_First, SSID_Second, SSID_Third, SSID_Forth, SSID_Fifth
+BSSID(String): BSSID_First, BSSID_Second, BSSID_Third, BSSID_Forth, BSSID_Fifth
+Signal Strength(int): Signal_First, Signal_Second, Signal_Third, Signal_Forth, Signal_Fifth
+Location(String)
+LocationX(int)
+LocationY(int)
+Device(String)
+Time(String)
