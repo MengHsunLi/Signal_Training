@@ -1,7 +1,7 @@
 from firebase import firebase
 import pandas as pd
 
-url = "https://test-4fef8.firebaseio.com/"
+url = "https://test2-bf5f1.firebaseio.com/"
 db = firebase.FirebaseApplication(url, None)
 Signals = db.get("/Signals", None)
 def printInfo(infoDB):
